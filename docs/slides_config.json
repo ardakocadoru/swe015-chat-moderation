@@ -1,0 +1,13 @@
+{
+  "student_name": "Arda Kocadoru",
+  "student_id": "220901583",
+  "repo_url": "https://github.com/ardakocadoru/swe015-chat-moderation",
+  "video_url": "<YOUTUBE / DRIVE VIDEO URL>",
+  "hf_url": "https://huggingface.co/ardakocadoru/swe015-chat-moderation",
+  "failure_fn_id": 32466,
+  "failure_fn_note": "No swear word, it is a veiled curse (\"may it burn for you, but burn you\"). tf-idf caught this one (P = {p_tfidf:.2f}).",
+  "failure_fp_id": 28600,
+  "failure_fp_note": "Harmless, about shopping for trousers. The playful \"nasıl kumarbazlarsınız\" (what gamblers you are) reads like name-calling.",
+  "label_noise_id": 32570,
+  "label_noise_note": "A friendly \"anyone want to chat?\" labelled OFF. Some of the errors are really label noise."
+}

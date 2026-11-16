@@ -1,0 +1,307 @@
+{
+  "hardware": {
+    "cpu": "AMD Ryzen 7 5700X 8-Core Processor",
+    "physical_cores": 8,
+    "ram_gb": 31.9,
+    "os": "Windows 11",
+    "python": "3.12.16",
+    "torch": "2.15.0+cu132",
+    "onnxruntime": "1.32.0",
+    "device": "CPU only (GPU not used for inference)",
+    "date": "2026-11-16T12:27"
+  },
+  "test_set": "OffensEval-TR 2020 official test (n=3528)",
+  "latency_protocol": {
+    "runs": 300,
+    "warmup": 20,
+    "batch_size": 1,
+    "threads": [
+      1,
+      4
+    ],
+    "budget_ms_mean_1_thread": 50.0
+  },
+  "models": [
+    {
+      "key": "lexicon",
+      "model": "Rule: edit-distance lexicon",
+      "ladder_step": "Rule baseline (extra)",
+      "precision": "rules",
+      "runtime": "Python",
+      "size_mb": 0.0034923553466796875,
+      "macro_f1": 0.6537519366860685,
+      "accuracy": 0.7874149659863946,
+      "off_precision": 0.47258064516129034,
+      "off_recall": 0.4092178770949721,
+      "off_f1": 0.43862275449101795,
+      "confusion_matrix": [
+        [
+          2485,
+          327
+        ],
+        [
+          423,
+          293
+        ]
+      ],
+      "threshold": 0.7028,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 0.5322733334226845,
+          "median_ms": 0.4095999993296573,
+          "p95_ms": 1.328149999972084,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 0.4998233332419962,
+          "median_ms": 0.39089999881980475,
+          "p95_ms": 1.2569700013045804,
+          "runs": 300
+        }
+      },
+      "meets_budget": true
+    },
+    {
+      "key": "tfidf",
+      "model": "tf-idf + Logistic Regression",
+      "ladder_step": "1 \u00b7 Classical baseline",
+      "precision": "FP64",
+      "runtime": "scikit-learn",
+      "size_mb": 2.197686195373535,
+      "macro_f1": 0.768554508453412,
+      "accuracy": 0.8591269841269841,
+      "off_precision": 0.6809917355371901,
+      "off_recall": 0.5754189944134078,
+      "off_f1": 0.6237698713096139,
+      "confusion_matrix": [
+        [
+          2619,
+          193
+        ],
+        [
+          304,
+          412
+        ]
+      ],
+      "threshold": 0.6,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 1.6810270000102416,
+          "median_ms": 1.6156500000761298,
+          "p95_ms": 2.1806349999678787,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 1.673106999983247,
+          "median_ms": 1.60320000009051,
+          "p95_ms": 2.158044999919184,
+          "runs": 300
+        }
+      },
+      "meets_budget": true
+    },
+    {
+      "key": "w2v_ffn",
+      "model": "word2vec + Feedforward NN",
+      "ladder_step": "2a \u00b7 Neural network (ours, extra)",
+      "precision": "FP32",
+      "runtime": "PyTorch",
+      "size_mb": 11.814105987548828,
+      "macro_f1": 0.6891563981416948,
+      "accuracy": 0.7976190476190477,
+      "off_precision": 0.5013736263736264,
+      "off_recall": 0.5097765363128491,
+      "off_f1": 0.5055401662049861,
+      "confusion_matrix": [
+        [
+          2449,
+          363
+        ],
+        [
+          351,
+          365
+        ]
+      ],
+      "threshold": 0.52,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 0.3041730000192426,
+          "median_ms": 0.28655000005528564,
+          "p95_ms": 0.43585500022800266,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 0.26453899999523856,
+          "median_ms": 0.25384999980815337,
+          "p95_ms": 0.3934600001002764,
+          "runs": 300
+        }
+      },
+      "meets_budget": true
+    },
+    {
+      "key": "w2v_cnn",
+      "model": "word2vec + 1D CNN",
+      "ladder_step": "2 \u00b7 Neural network (ours)",
+      "precision": "FP32",
+      "runtime": "PyTorch",
+      "size_mb": 11.792176246643066,
+      "macro_f1": 0.7277931755737869,
+      "accuracy": 0.8364512471655329,
+      "off_precision": 0.6192109777015438,
+      "off_recall": 0.5041899441340782,
+      "off_f1": 0.5558121632024634,
+      "confusion_matrix": [
+        [
+          2590,
+          222
+        ],
+        [
+          355,
+          361
+        ]
+      ],
+      "threshold": 0.57,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 0.565101666670671,
+          "median_ms": 0.5716499999834923,
+          "p95_ms": 0.7096799999544601,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 0.5524016666731768,
+          "median_ms": 0.5454999998164567,
+          "p95_ms": 0.7213199999114295,
+          "runs": 300
+        }
+      },
+      "meets_budget": true
+    },
+    {
+      "key": "bert_fp32",
+      "model": "BERTurk fine-tuned",
+      "ladder_step": "3 \u00b7 Transformer",
+      "precision": "FP32",
+      "runtime": "PyTorch",
+      "size_mb": 422.00082778930664,
+      "macro_f1": 0.8141200061360374,
+      "accuracy": 0.8846371882086168,
+      "off_precision": 0.7417840375586855,
+      "off_recall": 0.6620111731843575,
+      "off_f1": 0.6996309963099631,
+      "confusion_matrix": [
+        [
+          2647,
+          165
+        ],
+        [
+          242,
+          474
+        ]
+      ],
+      "threshold": 0.54,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 81.65448400000969,
+          "median_ms": 72.07559999960722,
+          "p95_ms": 136.74734500025352,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 50.40809433334895,
+          "median_ms": 46.01430000002438,
+          "p95_ms": 83.52946999987125,
+          "runs": 300
+        }
+      },
+      "meets_budget": false
+    },
+    {
+      "key": "bert_onnx_fp32",
+      "model": "BERTurk fine-tuned (ONNX)",
+      "ladder_step": "3b \u00b7 Transformer, ONNX graph",
+      "precision": "FP32",
+      "runtime": "ONNX Runtime",
+      "size_mb": 422.2174663543701,
+      "macro_f1": 0.8141200061360374,
+      "accuracy": 0.8846371882086168,
+      "off_precision": 0.7417840375586855,
+      "off_recall": 0.6620111731843575,
+      "off_f1": 0.6996309963099631,
+      "confusion_matrix": [
+        [
+          2647,
+          165
+        ],
+        [
+          242,
+          474
+        ]
+      ],
+      "threshold": 0.54,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 54.35434833334057,
+          "median_ms": 46.23459999993429,
+          "p95_ms": 108.23443499996304,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 28.963024333331003,
+          "median_ms": 24.56485000016073,
+          "p95_ms": 57.13796000006824,
+          "runs": 300
+        }
+      },
+      "meets_budget": false
+    },
+    {
+      "key": "bert_int8",
+      "model": "BERTurk fine-tuned, quantized",
+      "ladder_step": "4 \u00b7 Quantized Transformer",
+      "precision": "INT8 (dynamic)",
+      "runtime": "ONNX Runtime",
+      "size_mb": 106.16972637176514,
+      "macro_f1": 0.8145491733956485,
+      "accuracy": 0.8854875283446711,
+      "off_precision": 0.7476190476190476,
+      "off_recall": 0.6578212290502793,
+      "off_f1": 0.6998514115898959,
+      "confusion_matrix": [
+        [
+          2653,
+          159
+        ],
+        [
+          245,
+          471
+        ]
+      ],
+      "threshold": 0.54,
+      "latency": {
+        "1_thread": {
+          "mean_ms": 27.852140333328254,
+          "median_ms": 22.833199999922726,
+          "p95_ms": 58.4856149998359,
+          "runs": 300
+        },
+        "4_thread": {
+          "mean_ms": 15.633953000011994,
+          "median_ms": 12.894100000039543,
+          "p95_ms": 32.06538999991154,
+          "runs": 300
+        }
+      },
+      "meets_budget": true
+    }
+  ],
+  "reruns": [
+    {
+      "models": [
+        "lexicon"
+      ],
+      "date": "2026-11-17T22:00"
+    }
+  ]
+}

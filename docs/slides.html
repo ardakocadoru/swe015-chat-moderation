@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Real-time moderation of Turkish game chat - SWE015</title>
+<style>
+@page { size: 1280px 720px; margin: 0; }
+:root { --ink:#16181d; --mute:#5b616e; --line:#e3e5e8; --acc:#e8452c; --clean:#2f7d6d; --soft:#f5f5f3; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #d9d9d9; }
+body { font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.slide { width: 1280px; height: 720px; background: #fff; position: relative; overflow: hidden; padding: 30px 64px 46px;
+         margin: 0 auto 16px; break-after: page; page-break-after: always; display: flex; flex-direction: column; }
+@media print { .slide { margin: 0; } html, body { background: #fff; } }
+.top { display: flex; justify-content: space-between; align-items: flex-start; }
+.nav { display: flex; gap: 6px; }
+.nav span { font-size: 13px; color: #a3a7af; padding-top: 7px; width: 132px; border-top: 3px solid var(--line); }
+.nav span.on { color: var(--ink); border-top-color: var(--acc); font-weight: 600; }
+.pno { font-family: Bahnschrift, "Segoe UI", sans-serif; font-size: 15px; color: var(--mute); padding-top: 6px; }
+h1 { font-family: Bahnschrift, "Segoe UI", sans-serif; font-weight: 600; font-size: 37px; line-height: 1.12;
+     letter-spacing: -0.005em; margin: 20px 0 0; max-width: 1100px; }
+.body { flex: 1; margin-top: 24px; min-height: 0; }
+h3 { font-family: Bahnschrift, "Segoe UI", sans-serif; font-weight: 600; font-size: 21px; margin: 0 0 10px; }
+p, li { font-size: 17.5px; line-height: 1.42; margin: 0 0 10px; }
+ul, ol { margin: 0; padding-left: 22px; }
+li { margin-bottom: 9px; }
+b { font-weight: 600; }
+code { font-family: Consolas, monospace; font-size: .86em; color: #3a3f48; }
+.note { font-size: 14.5px; color: var(--mute); line-height: 1.45; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+img.fig { width: 100%; display: block; }
+.foot { position: absolute; left: 64px; right: 64px; bottom: 18px; display: flex; justify-content: space-between;
+        font-size: 12.5px; color: #9a9ea6; }
+
+/* cover */
+.cover { flex-direction: row; padding: 0; }
+.cover-l { width: 600px; padding: 64px 20px 50px 72px; display: flex; flex-direction: column; }
+.cover-l .kick { font-size: 15px; color: var(--mute); line-height: 1.45; border-left: 4px solid var(--acc); padding-left: 14px; }
+.cover-l h1 { font-size: 56px; line-height: 1.04; margin: 30px 0 16px; letter-spacing: -0.015em; }
+.cover-l .lead { font-size: 19px; color: #3a3f48; line-height: 1.45; margin-bottom: 24px; }
+.who { border-collapse: collapse; font-size: 16px; margin-top: auto; }
+.who td { padding: 4px 14px 4px 0; vertical-align: top; }
+.who td:first-child { color: var(--mute); width: 108px; white-space: nowrap; }
+.who a { white-space: nowrap; font-size: 15px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--acc); text-underline-offset: 3px; }
+.cover-r { flex: 1; background: var(--soft); padding: 52px 56px 40px 48px; display: flex; flex-direction: column; justify-content: center; }
+.cover-r img { width: 100%; border-radius: 6px; box-shadow: 0 18px 40px rgba(22,24,29,.16); border: 1px solid #e0e0e0; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 30px; }
+.kpis div { border-top: 3px solid var(--ink); padding-top: 10px; }
+.kpis div:first-child { border-top-color: var(--acc); }
+.kpis b { display: block; font-family: Bahnschrift, sans-serif; font-size: 40px; font-weight: 600; line-height: 1; }
+.kpis small { font-size: 20px; font-weight: 400; }
+.kpis span { display: block; font-size: 13.5px; color: var(--mute); margin-top: 6px; line-height: 1.35; }
+
+/* intro */
+.intro .big-p { font-size: 21px; line-height: 1.45; }
+.sub { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); margin-top: 22px; }
+.targets .sub { margin: 0 0 -6px; }
+.users { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+.users div { background: var(--soft); padding: 12px 14px; }
+.users b { display: block; font-size: 16px; } .users span { font-size: 14px; color: var(--mute); }
+.targets { display: flex; flex-direction: column; gap: 18px; }
+.tg { display: flex; gap: 18px; border-top: 1px solid var(--line); padding-top: 16px; }
+.tg .no { font-family: Bahnschrift, sans-serif; font-size: 18px; color: var(--acc); font-weight: 600; padding-top: 6px; width: 28px; flex: none; }
+.tg b { display: block; font-family: Bahnschrift, sans-serif; font-size: 34px; font-weight: 600; line-height: 1.1; margin-bottom: 4px; }
+.tg span { font-size: 16px; color: var(--mute); line-height: 1.4; }
+
+/* data */
+.ba { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+.ba td { padding: 8px 8px; border-bottom: 1px solid var(--line); font-size: 15.5px; }
+.ba td:nth-child(1) { font-family: Consolas, monospace; font-size: 15px; color: var(--acc); }
+.ba td:nth-child(2) { font-family: Consolas, monospace; font-size: 15px; }
+.ba td:nth-child(2)::before { content: "\2192\00a0\00a0"; color: #a3a7af; }
+.ba td:nth-child(3) { color: var(--mute); font-size: 14px; }
+
+/* architecture */
+.arch { display: flex; justify-content: center; }
+.arch svg { height: 532px; width: auto; max-width: 100%; }
+
+/* technique map */
+.tmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.tmap .col { border-top: 3px solid var(--ink); padding-top: 10px; }
+.tmap .col.hot { border-top-color: var(--acc); }
+.tmap .L { font-family: Bahnschrift, sans-serif; font-size: 44px; font-weight: 600; line-height: 1; }
+.tmap .hot .L { color: var(--acc); }
+.tmap .Ln { font-size: 15px; color: var(--mute); margin: 2px 0 12px; }
+.ti { background: var(--soft); padding: 9px 12px; margin-bottom: 9px; }
+.ti b { display: block; font-size: 15px; line-height: 1.3; }
+.ti span { display: block; font-size: 14px; color: #3a3f48; margin: 3px 0 4px; line-height: 1.35; }
+.ti code { font-size: 12.5px; color: var(--mute); }
+
+/* ladder */
+.ladder { position: relative; height: 100%; }
+.step { position: absolute; width: 540px; display: flex; gap: 16px; background: #fff; border: 1px solid var(--line); padding: 14px 18px;
+        box-shadow: 0 6px 16px rgba(22,24,29,.06); }
+.step.s0 { left: 0; top: 330px; } .step.s1 { left: 196px; top: 220px; } .step.s2 { left: 392px; top: 110px; } .step.s3 { left: 588px; top: 0; }
+.step.hot { border: 2px solid var(--acc); }
+.sn { font-family: Bahnschrift, sans-serif; font-size: 46px; font-weight: 600; line-height: .95; width: 34px; color: #c3c6cc; flex: none; }
+.step.hot .sn { color: var(--acc); }
+.sb { flex: 1; }
+.sb b { display: block; font-size: 18px; } .sb span { display: block; font-size: 13.5px; color: var(--mute); line-height: 1.35; margin: 2px 0 7px; }
+.bar { position: relative; height: 20px; background: var(--soft); width: calc(100% - 104px); }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; background: #3a3f48; }
+.step.hot .bar i { background: var(--acc); }
+.bar em { position: absolute; left: calc(100% + 10px); white-space: nowrap; top: 0; font-style: normal; font-size: 13px; line-height: 20px; color: var(--ink); font-weight: 600; }
+.extras { position: absolute; right: 0; top: 330px; width: 400px; font-size: 14.5px; color: var(--mute); line-height: 1.45;
+          border-left: 3px solid var(--line); padding-left: 14px; }
+
+/* quantization */
+.steps li { margin-bottom: 14px; }
+.formula { font-family: Cambria, Georgia, serif; font-style: italic; font-size: 26px; margin: 10px 0 2px; padding: 8px 16px;
+           background: var(--soft); display: block; width: fit-content; }
+
+/* results */
+.res { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.res th { font-size: 14px; color: var(--mute); font-weight: 600; text-align: left; padding: 6px 10px; border-bottom: 2px solid var(--ink); vertical-align: bottom; }
+.res td { font-size: 17px; padding: 10px 10px; border-bottom: 1px solid var(--line); }
+.res .n { text-align: right; font-variant-numeric: tabular-nums; }
+.res td.n { font-family: Bahnschrift, "Segoe UI", sans-serif; font-size: 18px; }
+.res tr.hot td { background: #fdeeeb; font-weight: 600; }
+.res tr.hot td:first-child { box-shadow: inset 4px 0 0 var(--acc); }
+.res tr.ext td { color: #8a8f98; }
+
+/* comparison */
+.charts { gap: 24px; }
+.finds { margin-top: 8px; }
+.finds div { border-top: 3px solid var(--ink); padding-top: 8px; }
+.finds div:nth-child(2) { border-top-color: var(--acc); }
+.finds b { display: block; font-family: Bahnschrift, sans-serif; font-size: 22px; font-weight: 600; margin-bottom: 3px; }
+.finds span { font-size: 14.5px; color: var(--mute); line-height: 1.4; }
+
+.wl { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.wl th { font-size: 13.5px; color: var(--mute); font-weight: 600; text-align: left; padding: 4px 10px; border-bottom: 2px solid var(--ink); }
+.wl td { font-size: 14.5px; padding: 6px 10px; border-bottom: 1px solid var(--line); line-height: 1.3; }
+.wl td:first-child { font-weight: 600; white-space: nowrap; }
+.wl tr.hot td { background: #fdeeeb; }
+.wl tr.hot td:first-child { box-shadow: inset 4px 0 0 var(--acc); }
+/* errors */
+.ex { border-left: 3px solid var(--ink); padding: 4px 0 4px 14px; margin-bottom: 16px; }
+.eh { font-size: 13.5px; color: var(--mute); margin-bottom: 3px; }
+.tag { font-size: 12px; font-weight: 600; padding: 2px 8px; margin-right: 6px; color: #fff; }
+.tag.off { background: var(--acc); } .tag.fa { background: #3a3f48; } .tag.nz { background: #a3a7af; }
+.ex q { display: block; font-size: 17px; quotes: "\201C" "\201D"; }
+.en { font-size: 13.5px; color: var(--mute); margin-top: 4px; line-height: 1.4; }
+.cm { border-collapse: collapse; margin: 6px 0 18px; }
+.cm th { font-size: 14px; color: var(--mute); font-weight: 600; padding: 8px 14px; text-align: left; }
+.cm td { font-family: Bahnschrift, sans-serif; font-size: 34px; font-weight: 600; width: 170px; height: 92px; text-align: center; }
+.cm td.good { background: #e9f3f0; color: var(--clean); } .cm td.bad { background: #fdeeeb; color: var(--acc); }
+
+/* limitations / ai */
+.lim li { font-size: 18px; } .ai li { font-size: 17px; }
+.verdict { margin-top: 26px; border-left: 5px solid var(--acc); background: var(--soft); padding: 18px 24px; font-family: Bahnschrift, sans-serif; font-size: 25px; line-height: 1.3; }
+.verdict span { display: block; font-family: "Segoe UI", sans-serif; font-size: 15px; color: var(--mute); margin-top: 6px; }
+.ai li { margin-bottom: 7px; }
+.src li { font-size: 14.5px; color: #3a3f48; }
+</style></head><body>
+
+<section class="slide cover">
+  <div class="cover-l">
+    <div class="kick">SWE015 Introduction to Large Language Models<br>Homework: Building an Intelligent Application</div>
+    <h1>Real-time<br>moderation of<br>Turkish game chat</h1>
+    <p class="lead">A ladder of four models, from an edit-distance lexicon to an INT8-quantized BERTurk
+    that flags offensive messages on a single CPU core.</p>
+    <table class="who">
+      <tr><td>Student</td><td><b>Arda Kocadoru</b></td></tr>
+      <tr><td>Student ID</td><td>220901583</td></tr>
+      <tr><td>Use case</td><td>4, Real-Time Chat Moderation</td></tr>
+      <tr><td>Repository</td><td><a href="https://github.com/ardakocadoru/swe015-chat-moderation">github.com/ardakocadoru/swe015-chat-moderation</a></td></tr>
+      <tr><td>Demo video</td><td>&lt;YOUTUBE / DRIVE VIDEO URL&gt;</td></tr>
+      <tr><td>Model weights</td><td><a href="https://huggingface.co/ardakocadoru/swe015-chat-moderation">huggingface.co/ardakocadoru/swe015-chat-moderation</a></td></tr>
+    </table>
+  </div>
+  <div class="cover-r">
+    <img src="app_screenshot_chat.png" alt="app">
+    <div class="kpis">
+      <div><b>0.815</b><span>macro-F1 on the<br>official test set</span></div>
+      <div><b>27.9<small> ms</small></b><span>per message,<br>one CPU thread</span></div>
+      <div><b>106<small> MB</small></b><span>model size,<br>down from 422 MB</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="on">Introduction</span><span class="">Development</span><span class="">Conclusion</span></div><div class="pno">02 / 12</div></div>
+  <h1>Offensive messages must be hidden before others see them</h1>
+  <div class="body">
+<div class="g2 intro">
+  <div>
+    <p class="big-p">Most online games have an open chat, and players insult each other in it. The moderation model
+    checks each message before it is shown, so its run time adds to the delay of every message. The chat server has no GPU.</p>
+    <p>For <b>Use Case 4, Real-Time Chat Moderation</b>, I built an application that labels each Turkish message as clean or
+    offensive, hides the offensive ones and logs how long every decision takes.</p>
+    <div class="sub">Who it is for</div>
+    <div class="users"><div><b>Players</b><span>see fewer insults</span></div>
+      <div><b>Moderators</b><span>get fewer reports to review</span></div>
+      <div><b>Platform</b><span>runs it on CPU servers, no GPU</span></div></div>
+  </div>
+  <div class="targets">
+    <div class="sub">What success looks like</div>
+    <div class="tg"><div class="no">01</div><div><b>Macro-F1</b><span>on the official OffensEval-TR test set. Only
+      20% of the tweets are offensive, so plain accuracy would be misleading.</span></div></div>
+    <div class="tg"><div class="no">02</div><div><b>&le; 50 ms</b><span>mean time per message on one CPU thread,
+      including normalisation and tokenisation.</span></div></div>
+    <div class="tg"><div class="no">03</div><div><b>INT8 in a live app</b><span>the quantized Transformer runs inside a chat
+      interface that accepts new messages.</span></div></div>
+  </div>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="on">Development</span><span class="">Conclusion</span></div><div class="pno">03 / 12</div></div>
+  <h1>35,284 Turkish tweets: one in five is offensive, and the text is noisy</h1>
+  <div class="body">
+<div class="g2">
+  <div>
+    <p><b>OffensEval-TR 2020</b> (Çöltekin, LREC 2020), tweets labelled NOT or OFF, CC-BY 2.0.</p>
+    <img class="fig" src="fig/splits.svg" alt="splits">
+    <p class="note">Train and validation are a stratified 90/10 split of the official training file (seed 42). The
+    official test set is the held-out set: hyper-parameters, early stopping, thresholds and the quantization
+    variant were all chosen on validation. The test set is used only for the final evaluation, the same for every model.</p>
+  </div>
+  <div>
+    <h3>What the regex normaliser fixes</h3>
+    <table class="ba">
+      <tr><td>@USER @USER çok iyi</td><td>çok iyi</td><td>mentions in 48% of tweets</td></tr>
+      <tr><td>çoooook güzeeel</td><td>çok güzel</td><td>repeated letters, 4%</td></tr>
+      <tr><td>L Ü T F E N</td><td>lütfen</td><td>spaced-out letters</td></tr>
+      <tr><td>s4l4k</td><td>salak</td><td>leetspeak</td></tr>
+      <tr><td>#İyiOyunlar</td><td>iyi oyunlar</td><td>hashtags</td></tr>
+      <tr><td>IŞIK, güzel</td><td>isik, guzel</td><td>Turkish casing, ASCII</td></tr>
+    </table>
+    <p class="note">The classical models get the full normalisation. BERTurk is cased and has its own WordPiece
+    vocabulary, so it only gets the noise removal (<code>normalize.py</code>).</p>
+  </div>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="on">Development</span><span class="">Conclusion</span></div><div class="pno">04 / 12</div></div>
+  <h1>One code path from the chat box to the masked message</h1>
+  <div class="body"><div class="arch"><svg xmlns="http://www.w3.org/2000/svg" viewBox="10 10 1580 820" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e8452c"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="840" fill="#fff"/>
+
+  <!-- inference band -->
+  <rect x="20" y="20" width="1560" height="470" fill="#f6f6f4" stroke="#bbb"/>
+  <text x="36" y="48" font-size="19" font-weight="bold" fill="#16181d">Inference: app.py, running on the CPU (1 thread), local machine</text>
+
+  <g font-size="15" fill="#16181d" text-anchor="middle">
+    <rect x="40" y="80" width="190" height="130" fill="#fff" stroke="#555"/>
+    <text x="135" y="108" font-weight="bold">Gradio UI (input)</text>
+    <text x="135" y="132">app.py</text>
+    <text x="135" y="156">chat text box,</text>
+    <text x="135" y="178">model dropdown</text>
+
+    <rect x="270" y="80" width="215" height="130" fill="#fff" stroke="#555"/>
+    <text x="377" y="108" font-weight="bold">Normalisation</text>
+    <text x="377" y="132">normalize.py (regex)</text>
+    <text x="377" y="156">full: classical models</text>
+    <text x="377" y="178">light: BERTurk</text>
+
+    <rect x="525" y="80" width="185" height="130" fill="#fff" stroke="#555"/>
+    <text x="617" y="108" font-weight="bold">Tokenizer</text>
+    <text x="617" y="132">WordPiece</text>
+    <text x="617" y="156">32k vocabulary</text>
+    <text x="617" y="178">max. 96 tokens</text>
+
+    <rect x="750" y="80" width="265" height="130" fill="#fdeeeb" stroke="#e8452c" stroke-width="2.5"/>
+    <text x="882" y="108" font-weight="bold">BERTurk classifier (served)</text>
+    <text x="882" y="132">INT8, ONNX Runtime</text>
+    <text x="882" y="156">model_int8.onnx</text>
+    <text x="882" y="178">output: P(offensive)</text>
+
+    <rect x="1055" y="80" width="250" height="130" fill="#fff" stroke="#555"/>
+    <text x="1180" y="108" font-weight="bold">Post-processing</text>
+    <text x="1180" y="132">registry.predict_one: threshold</text>
+    <text x="1180" y="156">0.54 (tuned on validation)</text>
+    <text x="1180" y="178">app.py: mask, latency</text>
+
+    <rect x="1345" y="80" width="215" height="130" fill="#fff" stroke="#555"/>
+    <text x="1452" y="108" font-weight="bold">Gradio UI (output)</text>
+    <text x="1452" y="132">label + confidence,</text>
+    <text x="1452" y="156">masked message,</text>
+    <text x="1452" y="178">latency log, comparison</text>
+  </g>
+  <g stroke="#e8452c" stroke-width="2.5" marker-end="url(#b)">
+    <line x1="230" y1="145" x2="268" y2="145"/>
+    <line x1="485" y1="145" x2="523" y2="145"/>
+    <line x1="710" y1="145" x2="748" y2="145"/>
+    <line x1="1015" y1="145" x2="1053" y2="145"/>
+    <line x1="1305" y1="145" x2="1343" y2="145"/>
+  </g>
+
+  <!-- other models -->
+  <rect x="270" y="270" width="1035" height="195" fill="#fff" stroke="#888" stroke-dasharray="6 4"/>
+  <text x="286" y="296" font-size="16" font-weight="bold" fill="#16181d">Other models (model dropdown and comparison table), loaded by registry.load_model</text>
+  <g font-size="14" fill="#16181d" text-anchor="middle">
+    <rect x="286" y="312" width="158" height="135" fill="#f6f6f4" stroke="#999"/>
+    <text x="365" y="337" font-weight="bold">Lexicon matcher</text>
+    <text x="365" y="360">min. edit distance</text>
+    <text x="365" y="383">rules, Python</text>
+    <text x="365" y="406">lexicon.py</text>
+    <text x="365" y="429" fill="#666">full norm.</text>
+
+    <rect x="455" y="312" width="158" height="135" fill="#f6f6f4" stroke="#999"/>
+    <text x="534" y="337" font-weight="bold">tf-idf + LR</text>
+    <text x="534" y="360">word + char n-grams</text>
+    <text x="534" y="383">FP64, scikit-learn</text>
+    <text x="534" y="406">tfidf_model.py</text>
+    <text x="534" y="429" fill="#666">full norm.</text>
+
+    <rect x="624" y="312" width="158" height="135" fill="#f6f6f4" stroke="#999"/>
+    <text x="703" y="337" font-weight="bold">word2vec + 1D CNN</text>
+    <text x="703" y="360">own embeddings</text>
+    <text x="703" y="383">FP32, PyTorch</text>
+    <text x="703" y="406">w2v_cnn.py</text>
+    <text x="703" y="429" fill="#666">full norm.</text>
+
+    <rect x="793" y="312" width="158" height="135" fill="#f6f6f4" stroke="#999"/>
+    <text x="872" y="337" font-weight="bold">word2vec + FFN</text>
+    <text x="872" y="360">mean/max pooling</text>
+    <text x="872" y="383">FP32, PyTorch</text>
+    <text x="872" y="406">w2v_ffn.py</text>
+    <text x="872" y="429" fill="#666">full norm.</text>
+
+    <rect x="962" y="312" width="158" height="135" fill="#f6f6f4" stroke="#999"/>
+    <text x="1041" y="337" font-weight="bold">BERTurk</text>
+    <text x="1041" y="360">BertTorchModel</text>
+    <text x="1041" y="383">FP32, PyTorch</text>
+    <text x="1041" y="406">bert_model.py</text>
+    <text x="1041" y="429" fill="#666">light norm.</text>
+
+    <rect x="1131" y="312" width="158" height="135" fill="#f6f6f4" stroke="#999"/>
+    <text x="1210" y="337" font-weight="bold">BERTurk ONNX</text>
+    <text x="1210" y="360">BertOnnxModel</text>
+    <text x="1210" y="383">FP32, ONNX Runtime</text>
+    <text x="1210" y="406">model_fp32.onnx</text>
+    <text x="1210" y="429" fill="#666">light norm.</text>
+  </g>
+  <g stroke="#666" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#a)">
+    <line x1="377" y1="210" x2="377" y2="268"/>
+    <line x1="1180" y1="270" x2="1180" y2="212"/>
+  </g>
+
+  <!-- training band -->
+  <rect x="20" y="520" width="1560" height="300" fill="#fff" stroke="#bbb"/>
+  <text x="36" y="548" font-size="19" font-weight="bold" fill="#16181d">Training and evaluation: scripts/ (run_pipeline.py); BERTurk fine-tuned on an RTX 4070 GPU, everything else on the CPU</text>
+  <g font-size="14.5" fill="#16181d" text-anchor="middle">
+    <rect x="40" y="575" width="178" height="125" fill="#f6f6f4" stroke="#777"/>
+    <text x="129" y="600" font-weight="bold">01_prepare_data</text>
+    <text x="129" y="624">OffensEval-TR 2020</text>
+    <text x="129" y="647">train / val (90/10)</text>
+    <text x="129" y="670">official test set</text>
+
+    <rect x="243" y="575" width="178" height="125" fill="#f6f6f4" stroke="#777"/>
+    <text x="332" y="600" font-weight="bold">02_train_classical</text>
+    <text x="332" y="624">lexicon, tf-idf + LR</text>
+    <text x="332" y="647">grid search on val</text>
+
+    <rect x="446" y="575" width="178" height="125" fill="#f6f6f4" stroke="#777"/>
+    <text x="535" y="600" font-weight="bold">03 / 03b_train_w2v</text>
+    <text x="535" y="624">word2vec, FFN, CNN</text>
+    <text x="535" y="647">SGD, backprop,</text>
+    <text x="535" y="670">early stopping</text>
+
+    <rect x="649" y="575" width="178" height="125" fill="#f6f6f4" stroke="#777"/>
+    <text x="738" y="600" font-weight="bold">04_finetune_bert</text>
+    <text x="738" y="624">BERTurk + head</text>
+    <text x="738" y="647">AdamW, 3 epochs</text>
+    <text x="738" y="670">GPU (bf16)</text>
+
+    <rect x="852" y="575" width="178" height="125" fill="#f6f6f4" stroke="#777"/>
+    <text x="941" y="600" font-weight="bold">05_export_quantize</text>
+    <text x="941" y="624">ONNX export</text>
+    <text x="941" y="647">dynamic INT8</text>
+    <text x="941" y="670">variant chosen on val</text>
+
+    <rect x="1055" y="575" width="178" height="125" fill="#f6f6f4" stroke="#777"/>
+    <text x="1144" y="600" font-weight="bold">06 / 08</text>
+    <text x="1144" y="624">benchmark on test:</text>
+    <text x="1144" y="647">F1, MB, latency</text>
+    <text x="1144" y="670">error analysis</text>
+
+    <rect x="1300" y="575" width="260" height="125" fill="#f6f6f4" stroke="#5b616e"/>
+    <text x="1430" y="604" font-weight="bold">Hugging Face Hub</text>
+    <text x="1430" y="628">trained weights</text>
+    <text x="1430" y="651">(not stored in git)</text>
+  </g>
+  <g stroke="#555" stroke-width="2" marker-end="url(#a)">
+    <line x1="218" y1="637" x2="241" y2="637"/>
+    <line x1="421" y1="637" x2="444" y2="637"/>
+    <line x1="624" y1="637" x2="647" y2="637"/>
+    <line x1="827" y1="637" x2="850" y2="637"/>
+    <line x1="1030" y1="637" x2="1053" y2="637"/>
+    <line x1="1233" y1="637" x2="1298" y2="637"/>
+  </g>
+  <text x="1266" y="626" font-size="12.5" text-anchor="middle" fill="#555">07 upload</text>
+  <path d="M1430,575 L1430,492" fill="none" stroke="#5b616e" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#a)"/>
+  <text x="1420" y="508" font-size="13.5" fill="#5b616e" text-anchor="end">hub.py downloads the weights at the first start (~135 MB)</text>
+  <text x="40" y="740" font-size="14" fill="#555">Hyper-parameters, early stopping, thresholds and the quantization variant are selected on the validation split.</text>
+  <text x="40" y="762" font-size="14" fill="#555">The official test set is used only for the final evaluation (06_benchmark.py), with the same code path (registry.py) as the app.</text>
+  <text x="40" y="784" font-size="14" fill="#555">Outputs: results/results.md, results/tradeoff.png, results/error_analysis.md, results/*.json</text>
+</svg>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="on">Development</span><span class="">Conclusion</span></div><div class="pno">05 / 12</div></div>
+  <h1>Technique map: which component uses which technique</h1>
+  <div class="body">
+<div class="tmap">
+  <div class="col"><div class="L">A</div><div class="Ln">Neural networks</div><div class="ti"><b>Feedforward network, SGD, backpropagation, dropout</b><span>word2vec + FFN classifier</span><code>w2v_ffn.py</code></div><div class="ti"><b>1D convolution and max-pooling</b><span>word2vec + 1D CNN, ladder step 2</span><code>w2v_cnn.py</code></div></div>
+  <div class="col"><div class="L">B</div><div class="Ln">Classical NLP</div><div class="ti"><b>Regular expressions, tokenization, normalization</b><span>pre-processing in front of every model</span><code>normalize.py</code></div><div class="ti"><b>Minimum edit distance</b><span>rule baseline that tolerates typos and censored letters</span><code>lexicon.py</code></div><div class="ti"><b>tf-idf</b><span>classical baseline with logistic regression, ladder step 1</span><code>tfidf_model.py</code></div><div class="ti"><b>word2vec</b><span>own skip-gram embeddings from the training tweets</span><code>w2v_ffn.py</code></div></div>
+  <div class="col"><div class="L">C</div><div class="Ln">Transformers</div><div class="ti"><b>Fine-tuning BERT with a task head</b><span>BERTurk classifier, ladder step 3</span><code>04_finetune_bert.py</code></div><div class="ti"><b>WordPiece subword tokenizer, attention</b><span>32k-token Turkish vocabulary, 12 attention layers</span><code>bert_model.py</code></div></div>
+  <div class="col hot"><div class="L">D</div><div class="Ln">Efficient models</div><div class="ti"><b>Dynamic INT8 quantization</b><span>the model served in the app, ladder step 4</span><code>05_export_quantize.py</code></div><div class="ti"><b>ONNX and ONNX Runtime</b><span>graph export and CPU inference</span><code>bert_model.py</code></div><div class="ti"><b>Benchmarking size, latency, accuracy</b><span>one protocol for all seven models</span><code>06_benchmark.py</code></div></div>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="on">Development</span><span class="">Conclusion</span></div><div class="pno">06 / 12</div></div>
+  <h1>Four models of increasing capacity, tuned on validation only</h1>
+  <div class="body">
+<div class="ladder"><div class="step s0"><div class="sn">1</div><div class="sb"><b>tf-idf + logistic regression</b><span>word 1-2 and character 2-5 grams, class-balanced; C=1 and threshold tuned</span><div class="bar"><i style="width:73%"></i><em>val F1 0.784</em></div></div></div><div class="step s1"><div class="sn">2</div><div class="sb"><b>word2vec + 1D CNN</b><span>own 100-d skip-gram vectors, filters over 2, 3, 4 words, max-pooling; SGD, best epoch 17</span><div class="bar"><i style="width:52%"></i><em>val F1 0.731</em></div></div></div><div class="step s2"><div class="sn">3</div><div class="sb"><b>BERTurk, fine-tuned</b><span>111M parameters, 12 layers + linear head; AdamW 2e-5, 3 epochs, 4.5 min on an RTX 4070</span><div class="bar"><i style="width:94%"></i><em>val F1 0.836</em></div></div></div><div class="step s3 hot"><div class="sn">4</div><div class="sb"><b>BERTurk, INT8</b><span>same network exported to ONNX, weights quantized to 8-bit integers; no retraining</span><div class="bar"><i style="width:91%"></i><em>val F1 0.827</em></div></div></div>
+<div class="extras">Also trained for comparison: <b>lexicon + edit distance</b> (187 words mined from the training
+data, names and group words excluded, val F1 0.647) and <b>word2vec + feedforward network</b> (mean and max pooling, 512 and 128 units,
+val F1 0.705). Every decision threshold maximises validation macro-F1.</div></div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="on">Development</span><span class="">Conclusion</span></div><div class="pno">07 / 12</div></div>
+  <h1>INT8 quantization shrinks BERTurk from 422 MB to 106 MB</h1>
+  <div class="body">
+<div class="g2 q">
+  <div>
+    <ol class="steps">
+      <li><b>Export.</b> <code>torch.onnx.export</code> with dynamic batch and sequence axes. The ONNX graph reproduces
+        PyTorch to within 0.000009 in probability.</li>
+      <li><b>Quantize.</b> Weights become 8-bit integers with a scale S and a zero point Z; activations are quantized at
+        run time, so no calibration data is needed.
+        <div class="formula">q = round( x / S ) + Z</div></li>
+      <li><b>Select.</b> Keep the smallest of four settings that loses at most 0.01 validation macro-F1. The chosen one
+        costs 0.009 (0.836 to 0.827).</li>
+    </ol>
+    <p class="note">Per-channel scales collapsed the model to one class (val F1 0.447),
+    so per-tensor scales are used. Quantizing the 32k &times; 768 embedding matrix as well saved another
+    71 MB.</p>
+  </div>
+  <div><img class="fig" src="fig/quant.svg" alt="quantization variants"><p class="note">F1 above each bar is the validation macro-F1. Hatched: per-channel scales.</p></div>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="on">Development</span><span class="">Conclusion</span></div><div class="pno">08 / 12</div></div>
+  <h1>Results on the official test set, the same 3,528 tweets for all</h1>
+  <div class="body">
+<table class="res">
+  <tr><th>Step</th><th>Model</th><th>Precision, runtime</th><th class="n">Macro-F1</th><th class="n">Size (MB)</th>
+      <th class="n">Latency, 1 thread<br>mean (ms)</th><th class="n">p95 (ms)</th><th class="n">4 threads<br>mean (ms)</th><th>&le; 50 ms</th></tr>
+  <tr class=""><td>1</td><td>tf-idf + Logistic Regression</td><td>FP64, scikit-learn</td><td class="n">0.769</td><td class="n">2.2</td><td class="n">1.7</td><td class="n">2.2</td><td class="n">1.7</td><td>yes</td></tr><tr class=""><td>2</td><td>word2vec + 1D CNN</td><td>FP32, PyTorch</td><td class="n">0.728</td><td class="n">11.8</td><td class="n">0.6</td><td class="n">0.7</td><td class="n">0.6</td><td>yes</td></tr><tr class=""><td>3</td><td>BERTurk fine-tuned</td><td>FP32, PyTorch</td><td class="n">0.814</td><td class="n">422.0</td><td class="n">81.7</td><td class="n">136.7</td><td class="n">50.4</td><td>no</td></tr><tr class=""><td>3b</td><td>BERTurk fine-tuned (ONNX)</td><td>FP32, ONNX Runtime</td><td class="n">0.814</td><td class="n">422.2</td><td class="n">54.4</td><td class="n">108.2</td><td class="n">29.0</td><td>no</td></tr><tr class="hot"><td>4</td><td>BERTurk fine-tuned, quantized</td><td>INT8 (dynamic), ONNX Runtime</td><td class="n">0.815</td><td class="n">106.2</td><td class="n">27.9</td><td class="n">58.5</td><td class="n">15.6</td><td>yes</td></tr><tr class="ext"><td>+</td><td>Rule: edit-distance lexicon</td><td>rules, Python</td><td class="n">0.654</td><td class="n">0.003</td><td class="n">0.5</td><td class="n">1.3</td><td class="n">0.5</td><td>yes</td></tr><tr class="ext"><td>+</td><td>word2vec + Feedforward NN</td><td>FP32, PyTorch</td><td class="n">0.689</td><td class="n">11.8</td><td class="n">0.3</td><td class="n">0.4</td><td class="n">0.3</td><td>yes</td></tr>
+</table>
+<p class="note">Latency: one message at a time, end to end (normalisation, tokenisation, model), mean of
+300 different test messages after 20 warm-up messages, freshly loaded model.
+Size: model files on disk. Hardware: AMD Ryzen 7 5700X 8-Core Processor, 32 GB RAM, Windows 11, CPU only;
+PyTorch 2.15.0, ONNX Runtime 1.32.0. Rows marked + were trained in addition to the ladder.</p></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="">Development</span><span class="on">Conclusion</span></div><div class="pno">09 / 12</div></div>
+  <h1>INT8 BERTurk has the best F1 and stays under 50 ms</h1>
+  <div class="body">
+<div class="g2 charts"><img class="fig" src="fig/f1.svg" alt="f1"><img class="fig" src="fig/latency.svg" alt="latency"></div>
+<table class="wl">
+  <tr><th>Model</th><th>Where it wins</th><th>Where it loses</th></tr>
+  <tr><td>Lexicon (rules)</td><td>under 1 ms (0.5 ms), tiny, every decision explainable</td>
+      <td>finds only 41% of offensive tweets; misses insults without a listed word</td></tr>
+  <tr><td>tf-idf + LR</td><td>best cheap model: 0.769 in 1.7 ms; char n-grams catch typos and suffixes</td>
+      <td>no context; 4.6 F1 points below BERTurk</td></tr>
+  <tr><td>word2vec + CNN / FFN</td><td>under 1 ms; the CNN sees word order (0.728 vs 0.689)</td>
+      <td>embeddings learned from 28k tweets are weak, so both stay below tf-idf</td></tr>
+  <tr><td>BERTurk FP32</td><td>macro-F1 0.814, above every model without pre-training</td>
+      <td>422 MB; 82 ms in PyTorch misses the budget, ONNX (54 ms, p95 108) just misses it</td></tr>
+  <tr class="hot"><td>BERTurk INT8</td><td>same F1 (0.815), 4.0&times; smaller, 2.9&times; faster (27.9 ms): served in the app</td>
+      <td>p95 58 ms on one thread; still misses veiled insults</td></tr>
+</table>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="">Development</span><span class="on">Conclusion</span></div><div class="pno">10 / 12</div></div>
+  <h1>Where it fails: veiled insults, look-alikes, noisy labels</h1>
+  <div class="body">
+<div class="g2 err">
+  <div>
+    <div class="ex"><div class="eh"><span class="tag off">missed</span> gold OFF, P(offensive) = 0.01</div>
+      <q>Senin için yansın ama seni yaksın</q><div class="en">No swear word, it is a veiled curse (&quot;may it burn for you, but burn you&quot;). tf-idf caught this one (P = 0.83).</div></div>
+    <div class="ex"><div class="eh"><span class="tag fa">false alarm</span> gold NOT, P(offensive) = 0.98</div>
+      <q>Saatlerdir internetten deri pantolon seçmeye çalışıyorum ama hiç bişeyin bana olup olmayacağından emin olamıyorum siz nasıl kahinlersiniz nasıl kumarbazlarsınız siz</q><div class="en">Harmless, about shopping for trousers. The playful &quot;nasıl kumarbazlarsınız&quot; (what gamblers you are) reads like name-calling.</div></div>
+    <div class="ex"><div class="eh"><span class="tag nz">label?</span> gold OFF, P(offensive) = 0.00</div>
+      <q>Tanışmak isteyen ve sohbet etmek isteyen var mı ?   İyi geceler</q><div class="en">A friendly &quot;anyone want to chat?&quot; labelled OFF. Some of the errors are really label noise.</div></div>
+  </div>
+  <div>
+    <h3>INT8 BERTurk on the test set</h3>
+    <table class="cm">
+      <tr><th></th><th>predicted clean</th><th>predicted offensive</th></tr>
+      <tr><th>gold clean</th><td class="good">2,653</td><td class="bad">159</td></tr>
+      <tr><th>gold offensive</th><td class="bad">245</td><td class="good">471</td></tr>
+    </table>
+    <p class="note">Recall on offensive tweets 66%, precision 75%. Missed insults
+    are more frequent than false alarms, so some abuse still gets through. Quantization changed only
+    47 of 3,528 decisions compared to FP32.</p>
+  </div>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="">Development</span><span class="on">Conclusion</span></div><div class="pno">11 / 12</div></div>
+  <h1>Limitations, and what I would do next</h1>
+  <div class="body">
+<div class="g2 lim">
+  <div>
+    <h3>Limitations</h3>
+    <ul>
+      <li><b>Domain.</b> The data are tweets, not game chat; game slang and one-word messages are under-represented.</li>
+      <li><b>Hard cases.</b> Veiled insults, sarcasm and sub-word look-alikes are still misclassified.</li>
+      <li><b>Tail latency.</b> On one thread the INT8 p95 is 58 ms, so long messages can exceed
+          50 ms. With 4 threads the p95 drops to 32 ms.</li>
+      <li><b>Labels.</b> Only clean or offensive, one annotation per tweet, with some label noise.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Next steps</h3>
+    <ul>
+      <li><b>Distillation.</b> Train a smaller student (e.g. DistilBERTurk) from the fine-tuned model, then quantize it,
+          to bring the p95 under 50 ms.</li>
+      <li><b>Cascade.</b> Let tf-idf (1.7 ms) decide the easy messages and call BERTurk only when it is unsure.</li>
+      <li><b>In-domain data.</b> Collect and label real game-chat messages, starting with the ones the model is least sure about.</li>
+    </ul>
+  </div>
+</div>
+<div class="verdict">The goal is met: the quantized Transformer is the most accurate model (0.815 macro-F1) and
+answers in 27.9 ms on one CPU thread, inside the 50 ms budget.
+<span>Still open: tail latency and veiled insults (see next steps).</span></div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+
+<section class="slide">
+  <div class="top"><div class="nav"><span class="">Introduction</span><span class="">Development</span><span class="on">Conclusion</span></div><div class="pno">12 / 12</div></div>
+  <h1>AI usage statement</h1>
+  <div class="body">
+<div class="g2 ai">
+  <div>
+    <h3>Tool</h3>
+    <p><b>Claude Code</b> (Anthropic), an AI coding assistant, used for:</p>
+    <ul>
+      <li>going through the homework requirements with me and suggesting the plan;</li>
+      <li>writing and debugging the Python code: data pipeline, models, training and benchmark scripts, Gradio app;</li>
+      <li>running the scripts on my computer;</li>
+      <li>the README and first drafts of the slide texts, the architecture diagram and the video script.</li>
+    </ul>
+    <h3>My part</h3>
+    <ul>
+      <li>chose the use case and approved the design decisions (latency budget, model ladder, quantization rule);</li>
+      <li>all experiments ran on my own computer; every number here comes from these runs (<code>results/*.json</code>),
+          not from papers, model cards or AI answers;</li>
+      <li>read through the code, tested the app and recorded the demo video.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Sources</h3>
+    <ul class="src">
+      <li>Ç. Çöltekin. A Corpus of Turkish Offensive Language on Social Media. LREC 2020 (OffensEval-TR 2020, CC-BY 2.0).</li>
+      <li>S. Schweter. BERTurk, dbmdz/bert-base-turkish-cased, Hugging Face Hub (MIT licence).</li>
+      <li>L. Tunstall, L. von Werra, T. Wolf. Natural Language Processing with Transformers, ch. 8.</li>
+      <li>D. Jurafsky, J. H. Martin. Speech and Language Processing, 3rd ed. draft.</li>
+      <li>T. Mikolov et al. Distributed Representations of Words and Phrases. NeurIPS 2013 (word2vec).</li>
+      <li>Y. Kim. Convolutional Neural Networks for Sentence Classification. EMNLP 2014 (1D CNN).</li>
+      <li>PyTorch, Hugging Face Transformers, ONNX Runtime, gensim, scikit-learn, Gradio.</li>
+    </ul>
+  </div>
+</div></div>
+  <div class="foot"><span>Arda Kocadoru, 220901583</span><span>SWE015 Introduction to LLMs, homework</span></div>
+</section>
+</body></html>

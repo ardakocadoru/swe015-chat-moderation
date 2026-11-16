@@ -1,0 +1,29 @@
+{
+  "train": {
+    "n": 28580,
+    "offensive": 5518,
+    "offensive_pct": 19.31,
+    "mean_words": 15.5,
+    "p95_words": 36,
+    "with_user_mention_pct": 47.5,
+    "with_repeated_letters_pct": 3.9
+  },
+  "val": {
+    "n": 3176,
+    "offensive": 613,
+    "offensive_pct": 19.3,
+    "mean_words": 15.3,
+    "p95_words": 35,
+    "with_user_mention_pct": 46.9,
+    "with_repeated_letters_pct": 3.6
+  },
+  "test": {
+    "n": 3528,
+    "offensive": 716,
+    "offensive_pct": 20.29,
+    "mean_words": 15.8,
+    "p95_words": 36,
+    "with_user_mention_pct": 47.7,
+    "with_repeated_letters_pct": 4.4
+  }
+}

@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.gradio/
+# data is downloaded by scripts/01_prepare_data.py
+data/
+# weights live on the Hugging Face Hub, never in git
+models/
+*.onnx
+*.safetensors
+*.pt
+*.joblib
+*.kv
+*.npy
+# temporary external-data files that ONNX shape inference may leave behind
+*.data

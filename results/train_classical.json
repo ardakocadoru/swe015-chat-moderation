@@ -1,0 +1,171 @@
+{
+  "lexicon": {
+    "chosen": {
+      "min_df": 3,
+      "min_p_off": 0.7,
+      "size": 187,
+      "val_macro_f1": 0.6467264354519365
+    },
+    "grid": [
+      {
+        "min_df": 3,
+        "min_p_off": 0.5,
+        "size": 809,
+        "val_macro_f1": 0.5258626323565783
+      },
+      {
+        "min_df": 3,
+        "min_p_off": 0.6,
+        "size": 471,
+        "val_macro_f1": 0.6251990275313752
+      },
+      {
+        "min_df": 3,
+        "min_p_off": 0.7,
+        "size": 187,
+        "val_macro_f1": 0.6467264354519365
+      },
+      {
+        "min_df": 3,
+        "min_p_off": 0.8,
+        "size": 55,
+        "val_macro_f1": 0.6083927873250905
+      },
+      {
+        "min_df": 3,
+        "min_p_off": 0.9,
+        "size": 7,
+        "val_macro_f1": 0.5400600991998842
+      },
+      {
+        "min_df": 5,
+        "min_p_off": 0.5,
+        "size": 463,
+        "val_macro_f1": 0.5604586580728903
+      },
+      {
+        "min_df": 5,
+        "min_p_off": 0.6,
+        "size": 263,
+        "val_macro_f1": 0.636458387857711
+      },
+      {
+        "min_df": 5,
+        "min_p_off": 0.7,
+        "size": 133,
+        "val_macro_f1": 0.6460523176941974
+      },
+      {
+        "min_df": 5,
+        "min_p_off": 0.8,
+        "size": 55,
+        "val_macro_f1": 0.6083927873250905
+      },
+      {
+        "min_df": 5,
+        "min_p_off": 0.9,
+        "size": 7,
+        "val_macro_f1": 0.5400600991998842
+      },
+      {
+        "min_df": 10,
+        "min_p_off": 0.5,
+        "size": 178,
+        "val_macro_f1": 0.6211745492953429
+      },
+      {
+        "min_df": 10,
+        "min_p_off": 0.6,
+        "size": 101,
+        "val_macro_f1": 0.6365467362446214
+      },
+      {
+        "min_df": 10,
+        "min_p_off": 0.7,
+        "size": 60,
+        "val_macro_f1": 0.6274986844490272
+      },
+      {
+        "min_df": 10,
+        "min_p_off": 0.8,
+        "size": 35,
+        "val_macro_f1": 0.5998329558408677
+      },
+      {
+        "min_df": 10,
+        "min_p_off": 0.9,
+        "size": 7,
+        "val_macro_f1": 0.5400600991998842
+      },
+      {
+        "min_df": 20,
+        "min_p_off": 0.5,
+        "size": 60,
+        "val_macro_f1": 0.6411118691250739
+      },
+      {
+        "min_df": 20,
+        "min_p_off": 0.6,
+        "size": 40,
+        "val_macro_f1": 0.6200956937799043
+      },
+      {
+        "min_df": 20,
+        "min_p_off": 0.7,
+        "size": 24,
+        "val_macro_f1": 0.6009808894079764
+      },
+      {
+        "min_df": 20,
+        "min_p_off": 0.8,
+        "size": 14,
+        "val_macro_f1": 0.58129502678313
+      },
+      {
+        "min_df": 20,
+        "min_p_off": 0.9,
+        "size": 6,
+        "val_macro_f1": 0.5400600991998842
+      }
+    ]
+  },
+  "tfidf": {
+    "chosen": {
+      "C": 1,
+      "threshold": 0.6,
+      "val_macro_f1": 0.7835020213970816
+    },
+    "grid": [
+      {
+        "C": 0.5,
+        "threshold": 0.57,
+        "val_macro_f1": 0.778089422464856
+      },
+      {
+        "C": 1,
+        "threshold": 0.6,
+        "val_macro_f1": 0.7835020213970816
+      },
+      {
+        "C": 2,
+        "threshold": 0.58,
+        "val_macro_f1": 0.7805681618536819
+      },
+      {
+        "C": 4,
+        "threshold": 0.55,
+        "val_macro_f1": 0.7783934427575223
+      },
+      {
+        "C": 8,
+        "threshold": 0.49,
+        "val_macro_f1": 0.775141530609815
+      },
+      {
+        "C": 16,
+        "threshold": 0.59,
+        "val_macro_f1": 0.7744628175595143
+      }
+    ]
+  }
+}

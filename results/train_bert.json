@@ -1,0 +1,56 @@
+{
+  "base_model": "dbmdz/bert-base-turkish-cased",
+  "best_step": 1341,
+  "threshold": 0.54,
+  "val_macro_f1": 0.8353939062548483,
+  "train_minutes": 4.5,
+  "device": "NVIDIA GeForce RTX 4070",
+  "hyperparameters": {
+    "epochs": 3,
+    "batch": 32,
+    "lr": 2e-05,
+    "warmup": 0.1,
+    "weight_decay": 0.01,
+    "max_len": 96,
+    "optimizer": "AdamW",
+    "precision": "bf16 autocast"
+  },
+  "history": [
+    {
+      "step": 447,
+      "epoch": 0.5,
+      "train_loss": 0.4245281219482422,
+      "val_macro_f1@0.5": 0.8269823712751636
+    },
+    {
+      "step": 894,
+      "epoch": 1.0,
+      "train_loss": 0.01125335693359375,
+      "val_macro_f1@0.5": 0.8161815280528262
+    },
+    {
+      "step": 1341,
+      "epoch": 1.5,
+      "train_loss": 0.19658279418945312,
+      "val_macro_f1@0.5": 0.8335843788034052
+    },
+    {
+      "step": 1788,
+      "epoch": 2.0,
+      "train_loss": 1.020782470703125,
+      "val_macro_f1@0.5": 0.8286355076740405
+    },
+    {
+      "step": 2235,
+      "epoch": 2.5,
+      "train_loss": 0.10639703273773193,
+      "val_macro_f1@0.5": 0.8243186844897166
+    },
+    {
+      "step": 2682,
+      "epoch": 3.0,
+      "train_loss": 0.01752471923828125,
+      "val_macro_f1@0.5": 0.827988566270498
+    }
+  ]
+}

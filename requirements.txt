@@ -1,0 +1,19 @@
+# Python 3.12 recommended (tested). The app also installs on 3.13 and 3.14; training word2vec needs gensim (<= 3.13).
+torch==2.15.0
+transformers==5.23.0
+tokenizers==0.23.3
+safetensors==0.8.0
+onnx==1.23.2
+onnxscript==0.7.2
+onnxruntime==1.32.0
+gensim==4.4.0; python_version < "3.14"   # training only (no wheels for 3.14 yet)
+scikit-learn==1.9.1
+scipy==1.18.1
+numpy==2.5.5
+pandas==3.1.1
+joblib==1.6.0
+gradio==6.32.0
+huggingface-hub==2.4.0
+matplotlib==3.11.2
+psutil==7.2.2
+py-cpuinfo==9.0.0

@@ -1,0 +1,73 @@
+{
+  "cpu": "AMD Ryzen 7 5700X 8-Core Processor",
+  "physical_cores": 8,
+  "ram_gb": 31.9,
+  "os": "Windows 11",
+  "python": "3.12.16",
+  "torch": "2.15.0+cu132",
+  "onnxruntime": "1.32.0",
+  "device": "CPU only (GPU not used for inference)",
+  "date": "2026-11-16T12:27"
+}
+
+== Rule: edit-distance lexicon
+  1 thread(s): mean 0.17 ms, p95 0.43 ms
+  4 thread(s): mean 0.17 ms, p95 0.43 ms
+  macro-F1 0.6671  size 0.0 MB
+
+== tf-idf + Logistic Regression
+  1 thread(s): mean 1.68 ms, p95 2.18 ms
+  4 thread(s): mean 1.67 ms, p95 2.16 ms
+  macro-F1 0.7686  size 2.2 MB
+
+== word2vec + Feedforward NN
+  1 thread(s): mean 0.30 ms, p95 0.44 ms
+  4 thread(s): mean 0.26 ms, p95 0.39 ms
+  macro-F1 0.6892  size 11.8 MB
+
+== word2vec + 1D CNN
+  1 thread(s): mean 0.57 ms, p95 0.71 ms
+  4 thread(s): mean 0.55 ms, p95 0.72 ms
+  macro-F1 0.7278  size 11.8 MB
+
+== BERTurk fine-tuned
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  14%|█▍        | 28/201 [00:00<00:00, 253.63it/s]Loading weights:  27%|██▋       | 55/201 [00:00<00:00, 239.84it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 843.01it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  16%|█▌        | 32/201 [00:00<00:00, 315.17it/s]Loading weights:  32%|███▏      | 64/201 [00:00<00:00, 296.08it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 892.36it/s]
+  1 thread(s): mean 81.65 ms, p95 136.75 ms
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  16%|█▌        | 32/201 [00:00<00:00, 281.00it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 1059.72it/s]
+  4 thread(s): mean 50.41 ms, p95 83.53 ms
+  macro-F1 0.8141  size 422.0 MB
+
+== BERTurk fine-tuned (ONNX)
+  1 thread(s): mean 54.35 ms, p95 108.23 ms
+  4 thread(s): mean 28.96 ms, p95 57.14 ms
+  macro-F1 0.8141  size 422.2 MB
+
+== BERTurk fine-tuned, quantized
+  1 thread(s): mean 27.85 ms, p95 58.49 ms
+  4 thread(s): mean 15.63 ms, p95 32.07 ms
+  macro-F1 0.8145  size 106.2 MB
+# Results - OffensEval-TR 2020 official test set (n = 3,528)
+
+Hardware: AMD Ryzen 7 5700X 8-Core Processor, 8 cores, 31.9 GB RAM, Windows 11; CPU only (GPU not used for inference). PyTorch 2.15.0+cu132, ONNX Runtime 1.32.0. Measured 2026-11-16T12:27.
+
+Latency: batch size 1, end-to-end (normalisation + tokenisation + model), mean of 300 runs after 20 warm-up calls. Budget: mean <= 50 ms per message on 1 CPU thread.
+
+| Ladder step | Model | Precision / runtime | Macro-F1 | Offensive F1 | Size (MB) | Latency 1 thread mean (ms) | p95 (ms) | Latency 4 threads mean (ms) | Budget |
+|---|---|---|---|---|---|---|---|---|---|
+| Rule baseline (extra) | Rule: edit-distance lexicon | rules / Python | 0.667 | 0.454 | 0.001 | 0.17 | 0.43 | 0.17 | yes |
+| 1 · Classical baseline | tf-idf + Logistic Regression | FP64 / scikit-learn | 0.769 | 0.624 | 2.2 | 1.68 | 2.18 | 1.67 | yes |
+| 2a · Neural network (ours, extra) | word2vec + Feedforward NN | FP32 / PyTorch | 0.689 | 0.506 | 11.8 | 0.30 | 0.44 | 0.26 | yes |
+| 2 · Neural network (ours) | word2vec + 1D CNN | FP32 / PyTorch | 0.728 | 0.556 | 11.8 | 0.57 | 0.71 | 0.55 | yes |
+| 3 · Transformer | BERTurk fine-tuned | FP32 / PyTorch | 0.814 | 0.700 | 422.0 | 81.65 | 136.75 | 50.41 | no |
+| 3b · Transformer, ONNX graph | BERTurk fine-tuned (ONNX) | FP32 / ONNX Runtime | 0.814 | 0.700 | 422.2 | 54.35 | 108.23 | 28.96 | no |
+| 4 · Quantized Transformer | BERTurk fine-tuned, quantized | INT8 (dynamic) / ONNX Runtime | 0.815 | 0.700 | 106.2 | 27.85 | 58.49 | 15.63 | yes |
+
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  14%|█▍        | 29/201 [00:00<00:00, 287.77it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 1088.82it/s]
+{
+  "false_positives": 159,
+  "false_negatives": 245,
+  "bert_wins": 232,
+  "tfidf_wins": 139,
+  "quantization_flips": 47
+}

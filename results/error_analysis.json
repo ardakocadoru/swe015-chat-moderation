@@ -1,0 +1,7 @@
+{
+  "false_positives": 159,
+  "false_negatives": 245,
+  "bert_wins": 232,
+  "tfidf_wins": 139,
+  "quantization_flips": 47
+}

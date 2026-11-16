@@ -1,0 +1,50 @@
+{
+  "max_abs_diff_torch_vs_onnx_fp32": 8.881092071533203e-06,
+  "val_macro_f1_fp32": 0.8358147229114972,
+  "fp32_onnx_size_mb": 422.2174663543701,
+  "selection_rule": "smallest variant with val macro-F1 drop <= 0.01",
+  "chosen_variant": "pre+matmul+embeddings",
+  "variants": {
+    "matmul": {
+      "ops": [
+        "MatMul",
+        "Gemm"
+      ],
+      "per_channel": false,
+      "size_mb": 177.71212673187256,
+      "val_macro_f1": 0.8281865300087319,
+      "label_agreement_with_fp32": 0.9877204030226701
+    },
+    "matmul_per_channel": {
+      "ops": [
+        "MatMul",
+        "Gemm"
+      ],
+      "per_channel": true,
+      "size_mb": 178.1116533279419,
+      "val_macro_f1": 0.4465934831852239,
+      "label_agreement_with_fp32": 0.832808564231738
+    },
+    "pre+matmul": {
+      "ops": [
+        "MatMul",
+        "Gemm"
+      ],
+      "per_channel": false,
+      "size_mb": 177.61030197143555,
+      "val_macro_f1": 0.8281865300087319,
+      "label_agreement_with_fp32": 0.9877204030226701
+    },
+    "pre+matmul+embeddings": {
+      "ops": [
+        "MatMul",
+        "Gemm",
+        "Gather"
+      ],
+      "per_channel": false,
+      "size_mb": 106.16972637176514,
+      "val_macro_f1": 0.8271093295699152,
+      "label_agreement_with_fp32": 0.9896095717884131
+    }
+  }
+}
