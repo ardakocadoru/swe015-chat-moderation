@@ -37,12 +37,14 @@ def esc(s) -> str:
 
 
 def link(url: str) -> str:
-    """Clickable link whose visible text drops the scheme, so it fits on one line."""
-    url = str(url)
+    """Clickable link; the visible text drops the scheme and any query string, long ones may wrap."""
+    url = str(url).strip()
     if not url.startswith(("https://", "http://")):        # placeholder text, not a link
         return esc(url)
-    shown = url.removeprefix("https://").removeprefix("http://").removeprefix("www.")
-    return f'<a href="{esc(url)}">{esc(shown)}</a>'
+    shown = url.removeprefix("https://").removeprefix("http://").removeprefix("www.").split("?")[0]
+    shown = shown.removesuffix("/view").rstrip("/")
+    cls = ' class="long"' if len(shown) > 50 else ""
+    return f'<a{cls} href="{esc(url)}">{esc(shown)}</a>'
 
 
 def bert_params_m():
@@ -517,6 +519,7 @@ img.fig { width: 100%; display: block; }
 .cover-l .lead { font-size: 19px; color: #3a3f48; line-height: 1.45; margin-bottom: 24px; }
 .who { border-collapse: collapse; font-size: 16px; margin-top: auto; }
 .who td { padding: 4px 14px 4px 0; vertical-align: top; }
+.who a.long { white-space: normal; overflow-wrap: anywhere; }
 .who td:first-child { color: var(--mute); width: 108px; white-space: nowrap; }
 .who a { white-space: nowrap; font-size: 15px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--acc); text-underline-offset: 3px; }
 .cover-r { flex: 1; background: var(--soft); padding: 52px 56px 40px 48px; display: flex; flex-direction: column; justify-content: center; }

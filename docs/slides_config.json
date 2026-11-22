@@ -2,7 +2,7 @@
   "student_name": "Arda Kocadoru",
   "student_id": "220901583",
   "repo_url": "https://github.com/ardakocadoru/swe015-chat-moderation",
-  "video_url": "<YOUTUBE / DRIVE VIDEO URL>",
+  "video_url": "https://youtu.be/dzRqAIHbPNk",
   "hf_url": "https://huggingface.co/ardakocadoru/swe015-chat-moderation",
   "failure_fn_id": 32466,
   "failure_fn_note": "No swear word, it is a veiled curse (\"may it burn for you, but burn you\"). tf-idf caught this one (P = {p_tfidf:.2f}).",
